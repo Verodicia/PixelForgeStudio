@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PixelForge Studio — Guided 5-Stage Pixel Art Creation Wizard</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <!-- CLEAN TOP HEADER WITH 5-STAGE STEPPER -->
+  <header class="ide-header">
+    <div class="brand-cluster">
+      <div class="brand-logo" aria-hidden="true">
+        <span class="px-dot c-cyan"></span>
+        <span class="px-dot c-amber"></span>
+        <span class="px-dot c-magenta"></span>
+        <span class="px-dot c-green"></span>
+      </div>
+      <div>
+        <h1 class="brand-title">PIXELFORGE STUDIO</h1>
+        <p class="brand-sub">Guided Pixel Art &amp; Animation Creation Pipeline</p>
+      </div>
+    </div>
+
+    <!-- Clean 6-Stage Horizontal Stepper -->
+    <nav class="top-stage-stepper" aria-label="Creation Pipeline Stages">
+      <button class="stepper-node active" data-stage="1" id="nav-stage-1">
+        <span class="node-circle" id="node-circle-1">1</span>
+        <span class="node-label">1. Project Rules</span>
+      </button>
+      <span class="stepper-line" id="stepper-line-1"></span>
+
+      <button class="stepper-node" data-stage="2" id="nav-stage-2">
+        <span class="node-circle" id="node-circle-2">2</span>
+        <span class="node-label">2. Pose Mannequin</span>
+      </button>
+      <span class="stepper-line" id="stepper-line-2"></span>
+
+      <button class="stepper-node" data-stage="3" id="nav-stage-3">
+        <span class="node-circle" id="node-circle-3">3</span>
+        <span class="node-label">3. AI Bridge</span>
+      </button>
+      <span class="stepper-line" id="stepper-line-3"></span>
+
+      <button class="stepper-node" data-stage="4" id="nav-stage-4">
+        <span class="node-circle" id="node-circle-4">4</span>
+        <span class="node-label">4. Pixel Cleanup</span>
+      </button>
+      <span class="stepper-line" id="stepper-line-4"></span>
+
+      <button class="stepper-node" data-stage="5" id="nav-stage-5">
+        <span class="node-circle" id="node-circle-5">5</span>
+        <span class="node-label">5. Mannequin Poses</span>
+      </button>
+      <span class="stepper-line" id="stepper-line-5"></span>
+
+      <button class="stepper-node" data-stage="6" id="nav-stage-6">
+        <span class="node-circle" id="node-circle-6">6</span>
+        <span class="node-label">6. Ground &amp; Export</span>
+      </button>
+    </nav>
+
+    <!-- Minimal Utility Actions -->
+    <div class="header-actions">
+      <button class="btn btn-ghost btn-sm" id="btn-load-demo-knight" title="Optional: Fill all stages with a sample project">
+        ✨ Load Sample Project
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btn-reset-bible" title="Clear all choices and start fresh from Stage 1">
+        ↺ Start Fresh
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE: CENTER CANVAS VIEWPORT + RIGHT STEP-BY-STEP WIZARD -->
+  <div class="ide-workspace" id="main-workspace">
+    <!-- LEFT / CENTER INTERACTIVE VIEWPORT -->
+    <main class="center-viewport-panel">
+      <!-- Minimal Viewport Toolbar -->
+      <div class="viewport-toolbar">
+        <div class="toolbar-group">
+          <span class="toolbar-stage-context" id="viewport-context-label">
+            Stage 1 Preview: Target Canvas Grid &amp; Camera Guide
+          </span>
+        </div>
+
+        <div class="toolbar-group" id="toolbar-view-modes">
+          <button class="btn-toggle" data-layout="split" id="btn-view-split">Split View</button>
+          <button class="btn-toggle" data-layout="left-only" id="btn-view-left">Source / Rig</button>
+          <button class="btn-toggle active" data-layout="right-only" id="btn-view-right">Output Canvas</button>
+        </div>
+
+        <div class="toolbar-group" id="toolbar-left-source-wrap">
+          <select id="select-left-buffer-mode" class="ide-select ide-select-sm" title="Choose Left Canvas Display">
+            <option value="mannequin">Color-ID Mannequin</option>
+            <option value="canny">Sobel Canny Edge Map</option>
+            <option value="raw-ai">Raw High-Res AI Input</option>
+            <option value="keyed">Chroma-Keyed Alpha</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="btn-toggle active" id="toggle-pixel-grid" title="Toggle 1px Pixel Grid"># Grid</button>
+          <button class="btn-toggle active" id="toggle-perspective-guide" title="Toggle Camera Guide">📐 Perspective</button>
+          <button class="btn-toggle active" id="toggle-checkerboard" title="Toggle Checkerboard">🏁 Alpha</button>
+          <button class="btn-toggle active" id="toggle-baseline-guide" title="Toggle Ground Baseline">⚓ Baseline</button>
+        </div>
+
+        <div class="toolbar-group zoom-group">
+          <button class="btn-icon" id="btn-zoom-out" title="Zoom Out">−</button>
+          <span class="zoom-readout" id="viewport-zoom-readout">500%</span>
+          <button class="btn-icon" id="btn-zoom-in" title="Zoom In">+</button>
+          <button class="btn-toggle" id="btn-zoom-reset" title="Fit Canvas">Fit</button>
+        </div>
+      </div>
+
+      <!-- Dual Split Canvas Container -->
+      <div class="dual-canvas-container" id="dual-viewport-container">
+        <!-- Left Pane: Conditioning / Raw AI Source -->
+        <div class="canvas-pane" id="viewport-left-pane">
+          <div class="pane-header-badge">
+            <span class="pane-tag" id="left-pane-title">MANNEQUIN / SOURCE</span>
+            <span class="pane-dim" id="left-pane-dims">64×64</span>
+          </div>
+          <div class="canvas-stage-wrap">
+            <canvas id="canvas-left" width="64" height="64"></canvas>
+            <canvas id="overlay-left" class="canvas-overlay" width="320" height="320"></canvas>
+          </div>
+        </div>
+
+        <!-- Right Pane: Output / Active Canvas -->
+        <div class="canvas-pane" id="viewport-right-pane">
+          <div class="pane-header-badge pane-badge-accent">
+            <span class="pane-tag" id="right-pane-title">TARGET CANVAS</span>
+            <span class="pane-dim" id="right-pane-dims">64×64</span>
+          </div>
+          <div class="canvas-stage-wrap">
+            <canvas id="canvas-right" width="64" height="64"></canvas>
+            <canvas id="overlay-right" class="canvas-overlay" width="320" height="320"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clean Viewport Footer -->
+      <div class="viewport-footer">
+        <div class="pixel-inspector">
+          <span class="inspector-swatch" id="hover-color-swatch"></span>
+          <span class="inspector-coord" id="hover-coord-text">X: --, Y: --</span>
+          <span class="inspector-hex" id="hover-hex-text">#------</span>
+          <span class="inspector-rgb" id="hover-rgb-text"></span>
+        </div>
+        <div class="viewport-help">
+          <span>Scroll: Zoom</span>
+          <span>•</span>
+          <span>Drag: Pan</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- RIGHT STEP-BY-STEP QUESTION WIZARD PANEL -->
+    <aside class="inspector-panel" aria-label="Step-by-Step Creation Wizard">
+      <!-- =================================================================
+           STAGE 1 WIZARD: PROJECT RULES (TECHNICAL BIBLE)
+           ================================================================= -->
+      <section class="stage-inspector active" id="inspector-stage-1" data-stage-panel="1">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 1 OF 5 • PROJECT SETUP</span>
+          <h2>Define Your Technical Bible</h2>
+          <p>Choose your resolution, camera perspective, upscale factor, and palette. These choices feed directly into your AI prompt and pixel cleanup engine.</p>
+        </div>
+
+        <!-- Question 1.1: Native Resolution -->
+        <div class="wizard-question-card active" data-stage="1" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">What pixel resolution is your final sprite?</span>
+            <span class="wq-answer-badge needed" id="ans-1-1">Select Size</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Click a preset resolution or enter custom dimensions below:</p>
+            <div class="preset-btn-grid">
+              <button class="btn-preset" data-res="32x32">32×32</button>
+              <button class="btn-preset" data-res="48x64">48×64</button>
+              <button class="btn-preset" data-res="64x64">64×64</button>
+              <button class="btn-preset" data-res="128x128">128×128</button>
+            </div>
+            <div class="inline-inputs mt-8">
+              <div class="field-box flex-1">
+                <label for="input-native-w">Custom Width</label>
+                <input type="number" id="input-native-w" min="16" max="256" value="64" class="ide-input" />
+              </div>
+              <div class="field-box flex-1">
+                <label for="input-native-h">Custom Height</label>
+                <input type="number" id="input-native-h" min="16" max="256" value="64" class="ide-input" />
+              </div>
+              <button class="btn btn-secondary btn-sm self-end" id="btn-apply-resolution">Set Custom</button>
+            </div>
+            <div class="wq-footer">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 1.2: Camera & Perspective -->
+        <div class="wizard-question-card" data-stage="1" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">What camera perspective does your game use?</span>
+            <span class="wq-answer-badge needed" id="ans-1-2">Select Camera</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Choose your camera angle (updates the canvas guide and Stage 3 prompt):</p>
+            <select id="select-perspective" class="ide-select">
+              <option value="iso">Isometric (30° / 2:1 pixel ratio)</option>
+              <option value="topdown">3/4 Top-Down RPG</option>
+              <option value="side">2D Side-Scroller</option>
+            </select>
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="3">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 1.3: AI Upscale Multiplier -->
+        <div class="wizard-question-card" data-stage="1" data-q="3">
+          <div class="wq-summary-bar" data-q-toggle="3">
+            <span class="wq-num">3</span>
+            <span class="wq-title">What AI generation upscale factor?</span>
+            <span class="wq-answer-badge needed" id="ans-1-3">Select Factor</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Pick an integer multiplier for high-res AI conditioning:</p>
+            <div class="preset-btn-grid cols-3">
+              <button class="btn-preset" data-upscale="8">8× Upscale</button>
+              <button class="btn-preset" data-upscale="16">16× Upscale</button>
+              <button class="btn-preset" data-upscale="32">32× Upscale</button>
+            </div>
+            <div class="calc-callout mt-8" id="upscale-calc-readout">
+              <code>64×64</code> Native @ <code>16×</code> = <strong>1024×1024 px</strong> AI Canvas
+            </div>
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="2">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="4">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 1.4: Master Color Palette -->
+        <div class="wizard-question-card" data-stage="1" data-q="4">
+          <div class="wq-summary-bar" data-q-toggle="4">
+            <span class="wq-num">4</span>
+            <span class="wq-title">Which Master Palette should lock your colors?</span>
+            <span class="wq-answer-badge needed" id="ans-1-4">Select Palette</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Select a palette preset or customize swatches below:</p>
+            <select id="select-palette-preset" class="ide-select">
+              <option value="fantasy16">16-Color Fantasy Tactical</option>
+              <option value="jrpg32">32-Color 16-Bit JRPG Master</option>
+              <option value="gameboy4">GameBoy DMG 4-Color Classic</option>
+              <option value="pico16">PICO-8 16-Color Retro Arcade</option>
+              <option value="cyber20">20-Color Dark Sci-Fi / Mecha</option>
+            </select>
+
+            <div class="palette-swatch-grid mt-8" id="master-palette-grid" title="Click a swatch to select"></div>
+
+            <div class="inline-inputs mt-8">
+              <input type="color" id="input-new-swatch-color" value="#00E5FF" class="color-picker-input" />
+              <input type="text" id="input-new-swatch-hex" value="#00E5FF" maxlength="7" class="ide-input mono-input" />
+              <button class="btn btn-secondary btn-xs" id="btn-add-swatch">+ Add</button>
+              <button class="btn btn-danger btn-xs" id="btn-remove-swatch">− Del</button>
+            </div>
+
+            <div class="inline-inputs mt-6">
+              <button class="btn btn-ghost btn-xs" id="btn-export-pal-hex">⬇ .HEX</button>
+              <button class="btn btn-ghost btn-xs" id="btn-export-pal-pal">⬇ .PAL</button>
+              <button class="btn btn-ghost btn-xs" id="btn-export-pal-json">⬇ .JSON</button>
+              <label class="btn btn-ghost btn-xs file-label">
+                ⬆ Import
+                <input type="file" id="input-import-palette-file" accept=".pal,.hex,.json,.txt" hidden />
+              </label>
+            </div>
+
+            <div class="wq-footer mt-10">
+              <button class="btn btn-ghost btn-sm" data-prev-q="3">← Back</button>
+              <button class="btn btn-primary" id="btn-complete-stage-1">
+                Lock Stage 1 Rules &amp; Continue →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           STAGE 2 WIZARD: BASE MANNEQUIN & POSE BLOCKOUT
+           ================================================================= -->
+      <section class="stage-inspector" id="inspector-stage-2" data-stage-panel="2">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 2 OF 5 • POSE BLOCKOUT</span>
+          <h2>Build Your Base Mannequin</h2>
+          <p>Configure your character's facing, proportions, and pose. These choices also feed into your Stage 3 prompt and conditioning guides.</p>
+        </div>
+
+        <!-- Question 2.1: Proportions & Facing -->
+        <div class="wizard-question-card active" data-stage="2" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">Facing direction &amp; body proportions?</span>
+            <span class="wq-answer-badge needed" id="ans-2-1">Configure</span>
+          </div>
+          <div class="wq-body">
+            <div class="field-box">
+              <label for="select-mannequin-facing">Facing Direction</label>
+              <select id="select-mannequin-facing" class="ide-select">
+                <option value="SE">SE (Isometric Front-Right)</option>
+                <option value="SW">SW (Isometric Front-Left)</option>
+                <option value="NE">NE (Isometric Back-Right)</option>
+                <option value="NW">NW (Isometric Back-Left)</option>
+                <option value="S">S (Front Ortho)</option>
+                <option value="N">N (Back Ortho)</option>
+                <option value="E">E (Side Profile Right)</option>
+                <option value="W">W (Side Profile Left)</option>
+              </select>
+            </div>
+
+            <div class="slider-row mt-8">
+              <div class="slider-label-line">
+                <span>Head-to-Body Ratio (0.8 Realistic → 1.8 Chibi)</span>
+                <code id="val-prop-head">1.25</code>
+              </div>
+              <input type="range" id="slider-prop-head" min="0.80" max="1.80" step="0.05" value="1.25" />
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-line">
+                <span>Shoulder Width</span>
+                <code id="val-prop-shoulder">1.00</code>
+              </div>
+              <input type="range" id="slider-prop-shoulder" min="0.70" max="1.50" step="0.05" value="1.00" />
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-line">
+                <span>Limb Thickness</span>
+                <code id="val-prop-limb">1.00</code>
+              </div>
+              <input type="range" id="slider-prop-limb" min="0.65" max="1.50" step="0.05" value="1.00" />
+            </div>
+
+            <label class="checkbox-line mt-6">
+              <input type="checkbox" id="check-show-weapon" checked />
+              <span>Include Weapon / Prop Anchor (<code>#FFFFFF</code>)</span>
+            </label>
+
+            <div class="wq-footer">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 2.2: Pose Preset & Bone Sliders -->
+        <div class="wizard-question-card" data-stage="2" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">What pose should the character hold?</span>
+            <span class="wq-answer-badge needed" id="ans-2-2">Select Pose</span>
+          </div>
+          <div class="wq-body">
+            <div class="field-box">
+              <label for="select-pose-preset">Pose Preset</label>
+              <select id="select-pose-preset" class="ide-select">
+                <option value="idle">Idle Combat Ready (Athletic Knee Flex &amp; Guard)</option>
+                <option value="walk1">Walk Frame 1 (Contact Heel Strike)</option>
+                <option value="walk2">Walk Frame 2 (Passing Low - Deep Knee Dip)</option>
+                <option value="walk3">Walk Frame 3 (Opposite Contact)</option>
+                <option value="walk4">Walk Frame 4 (Passing High - Knee Lift)</option>
+                <option value="run1">Run Frame 1 (Forward Drive &amp; Pumping Bent Arms)</option>
+                <option value="run2">Run Frame 2 (Airborne High Knee Tuck)</option>
+                <option value="attackWindup">Attack Windup (Coiled Elbow &amp; Crouch)</option>
+                <option value="attackStrike">Attack Strike (Deep Lunge &amp; Slash Extension)</option>
+                <option value="smash">Heavy Overhead Smash (Jump &amp; Ground Slam)</option>
+                <option value="cast">Spell Cast Channel (Raised Bent Elbows)</option>
+                <option value="hitDefend">Hit Reaction / Shield Brace (Buckling Knees)</option>
+                <option value="jump">Jump Apex (Mid-Air Tucked Knees)</option>
+                <option value="victory">Victory Cheer (Pumped Arm &amp; Bent Knee)</option>
+              </select>
+            </div>
+
+            <details class="fine-tune-accordion mt-8">
+              <summary>Fine-Tune Individual Articulated Joint Angles (Knees &amp; Elbows)</summary>
+              <div class="accordion-inner">
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FF5555"></i> Head Tilt</span>
+                    <code id="val-bone-head">0°</code>
+                  </div>
+                  <input type="range" id="slider-bone-head" min="-35" max="35" step="1" value="0" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#55FF55"></i> Torso Lean</span>
+                    <code id="val-bone-torso">2°</code>
+                  </div>
+                  <input type="range" id="slider-bone-torso" min="-35" max="35" step="1" value="2" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#5555FF"></i> Front Shoulder Angle</span>
+                    <code id="val-bone-farm">22°</code>
+                  </div>
+                  <input type="range" id="slider-bone-farm" min="-160" max="130" step="1" value="22" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#5555FF"></i> Front Elbow Bend</span>
+                    <code id="val-bone-felbow">55°</code>
+                  </div>
+                  <input type="range" id="slider-bone-felbow" min="0" max="140" step="1" value="55" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FFFF55"></i> Back Shoulder Angle</span>
+                    <code id="val-bone-barm">-18°</code>
+                  </div>
+                  <input type="range" id="slider-bone-barm" min="-160" max="130" step="1" value="-18" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FFFF55"></i> Back Elbow Bend</span>
+                    <code id="val-bone-belbow">45°</code>
+                  </div>
+                  <input type="range" id="slider-bone-belbow" min="0" max="140" step="1" value="45" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FF55FF"></i> Front Hip Angle</span>
+                    <code id="val-bone-fleg">8°</code>
+                  </div>
+                  <input type="range" id="slider-bone-fleg" min="-70" max="70" step="1" value="8" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FF55FF"></i> Front Knee Bend</span>
+                    <code id="val-bone-fknee">12°</code>
+                  </div>
+                  <input type="range" id="slider-bone-fknee" min="0" max="130" step="1" value="12" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#55FFFF"></i> Back Hip Angle</span>
+                    <code id="val-bone-bleg">-8°</code>
+                  </div>
+                  <input type="range" id="slider-bone-bleg" min="-70" max="70" step="1" value="-8" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#55FFFF"></i> Back Knee Bend</span>
+                    <code id="val-bone-bknee">16°</code>
+                  </div>
+                  <input type="range" id="slider-bone-bknee" min="0" max="130" step="1" value="16" />
+                </div>
+                <div class="slider-row">
+                  <div class="slider-label-line">
+                    <span><i class="dot-sm" style="background:#FFFFFF"></i> Weapon Angle</span>
+                    <code id="val-bone-weapon">-35°</code>
+                  </div>
+                  <input type="range" id="slider-bone-weapon" min="-180" max="180" step="1" value="-35" />
+                </div>
+              </div>
+            </details>
+
+            <div class="inline-inputs mt-4">
+              <input type="text" id="input-save-stage2-pose-name" class="ide-input flex-2" placeholder="Save this pose (e.g. Flying Kick)..." />
+              <button type="button" class="btn btn-secondary btn-xs flex-1" id="btn-save-stage2-custom-pose">
+                💾 Save Custom Pose
+              </button>
+            </div>
+            <div id="save-stage2-pose-feedback" class="mt-2 text-xs" style="display:none; color:var(--accent-cyan); font-family:var(--font-mono);"></div>
+
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="3">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 2.3: Export Conditioning Guides & Lock Pose -->
+        <div class="wizard-question-card" data-stage="2" data-q="3">
+          <div class="wq-summary-bar" data-q-toggle="3">
+            <span class="wq-num">3</span>
+            <span class="wq-title">Review Conditioning Guides</span>
+            <span class="wq-answer-badge" id="ans-2-3">Ready</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Your Color-ID Mannequin (Left) and Sobel Canny Edge Map (Right) are ready. Download them if using an external generator, or continue to Stage 3:</p>
+            <div class="inline-inputs">
+              <button class="btn btn-secondary btn-sm flex-1" id="btn-export-mannequin-png">
+                ⬇ Color-ID PNG
+              </button>
+              <button class="btn btn-secondary btn-sm flex-1" id="btn-export-canny-png">
+                ⬇ Canny Edge PNG
+              </button>
+            </div>
+            <div class="wq-footer mt-10">
+              <button class="btn btn-ghost btn-sm" data-prev-q="2">← Back</button>
+              <button class="btn btn-primary" id="btn-complete-stage-2">
+                Lock Mannequin &amp; Continue →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           STAGE 3 WIZARD: GUIDED AI BRIDGE & PROMPT COMPILER (SINGLE BASE CHARACTER)
+           ================================================================= -->
+      <section class="stage-inspector" id="inspector-stage-3" data-stage-panel="3">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 3 OF 5 • MASTER BASE CHARACTER</span>
+          <h2>Create Your Single Base Character</h2>
+          <p>First we create <strong>1 single base character</strong> (never a sprite sheet yet!). Your Stage 1 &amp; Stage 2 choices are woven into a single-character prompt below.</p>
+        </div>
+
+        <!-- Question 3.1: Character Description (Starts Blank - User Selects or Types!) -->
+        <div class="wizard-question-card active" data-stage="3" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">Who is your character &amp; what are they wearing?</span>
+            <span class="wq-answer-badge needed" id="ans-3-1">Your Input Needed</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Click a quick-pick chip or type your own description for each field:</p>
+
+            <!-- Character Class -->
+            <div class="field-box">
+              <label for="prompt-class">1. Character Class / Archetype</label>
+              <input type="text" id="prompt-class" class="ide-input" value="" placeholder="Type or click a chip below..." />
+              <div class="chip-row" data-chip-target="prompt-class">
+                <button type="button" class="chip-btn" data-val="Female paladin knight">Female Paladin</button>
+                <button type="button" class="chip-btn" data-val="tactical paladin knight">Paladin Knight</button>
+                <button type="button" class="chip-btn" data-val="cyberpunk shinobi ninja">Cyber Ninja</button>
+                <button type="button" class="chip-btn" data-val="forest druid mage">Forest Mage</button>
+              </div>
+            </div>
+
+            <!-- Armor / Attire -->
+            <div class="field-box mt-8">
+              <label for="prompt-armor">2. Armor / Clothing &amp; Colors</label>
+              <input type="text" id="prompt-armor" class="ide-input" value="" placeholder="Type or click a chip below..." />
+              <div class="chip-row" data-chip-target="prompt-armor">
+                <button type="button" class="chip-btn" data-val="steel plate cuirass, royal blue cape">Steel Plate &amp; Blue Cape</button>
+                <button type="button" class="chip-btn" data-val="steel plate cuirass, gold pauldrons, crimson cape">Gold &amp; Crimson Plate</button>
+                <button type="button" class="chip-btn" data-val="dark carbon techwear armor with neon cyan trim">Neon Techwear</button>
+                <button type="button" class="chip-btn" data-val="emerald hooded cloak with gold rune trim">Emerald Robes</button>
+              </div>
+            </div>
+
+            <!-- Weapon / Prop -->
+            <div class="field-box mt-8">
+              <label for="prompt-weapon">3. Weapon / Held Prop</label>
+              <input type="text" id="prompt-weapon" class="ide-input" value="" placeholder="Type or click a chip below..." />
+              <div class="chip-row" data-chip-target="prompt-weapon">
+                <button type="button" class="chip-btn" data-val="sword and shield">Sword &amp; Shield</button>
+                <button type="button" class="chip-btn" data-val="gleaming broadsword">Broadsword</button>
+                <button type="button" class="chip-btn" data-val="glowing cyan plasma katana">Plasma Katana</button>
+                <button type="button" class="chip-btn" data-val="wooden staff with floating crystal">Crystal Staff</button>
+              </div>
+            </div>
+
+            <!-- Era / Material Style -->
+            <div class="field-box mt-8">
+              <label for="prompt-material">4. Art Era / Material Style</label>
+              <input type="text" id="prompt-material" class="ide-input" value="" placeholder="Type or click a chip below..." />
+              <div class="chip-row" data-chip-target="prompt-material">
+                <button type="button" class="chip-btn" data-val="crisp 32-bit PS1 tactics sprite style">32-Bit Tactics</button>
+                <button type="button" class="chip-btn" data-val="16-bit SNES tactical RPG style">16-Bit SNES Tactical</button>
+                <button type="button" class="chip-btn" data-val="8-bit retro console pixel style">8-Bit Retro</button>
+                <button type="button" class="chip-btn" data-val="high-contrast arcade pixel art">Arcade CPS2</button>
+              </div>
+            </div>
+
+            <div class="wq-footer">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Next: Review Base Prompt →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 3.2: Single Base Character Prompt Rules & Breakdown -->
+        <div class="wizard-question-card" data-stage="3" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">Review Single Base Character Prompt</span>
+            <span class="wq-answer-badge" id="ans-3-2">Single Base Sprite</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">This prompt is tuned for <strong>Nano Banana / Gemini / SD</strong> to generate <strong>1 solo character in a 1:1 square frame</strong> (animation happens in Stage 5 after your base character is locked):</p>
+
+            <label class="checkbox-line">
+              <input type="checkbox" id="tok-magenta-bg" checked />
+              <span>Solid flat magenta background (<code>#FF00FF</code>) for Chroma-Keying</span>
+            </label>
+            <label class="checkbox-line mt-4">
+              <input type="checkbox" id="tok-zero-aa" checked />
+              <span>Clean pixel clusters &amp; zero anti-aliasing</span>
+            </label>
+            <label class="checkbox-line mt-4">
+              <input type="checkbox" id="tok-bold-outline" checked />
+              <span>Bold dark silhouette outlines</span>
+            </label>
+            <label class="checkbox-line mt-4">
+              <input type="checkbox" id="tok-flat-light" checked />
+              <span>Flat lighting &amp; no floor drop shadow</span>
+            </label>
+
+            <!-- Live Breakdown of Factors Included from Stages 1, 2, and 3 -->
+            <div class="prompt-factors-breakdown mt-8" id="prompt-factors-box">
+              <!-- Populated dynamically showing Stage 1 + Stage 2 + Stage 3 factors -->
+            </div>
+
+            <div class="field-box mt-8">
+              <div class="flex-between">
+                <label for="compiled-prompt-output">Single Base Character Prompt (Copy into Nano Banana / AI)</label>
+                <button class="btn btn-ghost btn-xs" id="btn-copy-prompt">📋 Copy</button>
+              </div>
+              <textarea id="compiled-prompt-output" rows="5" class="ide-textarea"></textarea>
+            </div>
+
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="3">Next: Load or Generate Sprite →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 3.3: Generate or Upload Base Character Image -->
+        <div class="wizard-question-card" data-stage="3" data-q="3">
+          <div class="wq-summary-bar" data-q-toggle="3">
+            <span class="wq-num">3</span>
+            <span class="wq-title">Upload AI Image or Synthesize Base Character</span>
+            <span class="wq-answer-badge needed" id="ans-3-3">Action Needed</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Upload your AI image (widescreen <code>16:9</code> or multi-character images are <strong>automatically isolated &amp; aspect-corrected</strong> into a single base character!):</p>
+
+            <!-- Option A: Drag & Drop External AI Image -->
+            <div class="dropzone-box" id="ai-image-dropzone">
+              <div class="dropzone-icon">📥</div>
+              <div class="dropzone-title">Option A: Drag &amp; Drop Your AI Image (Nano Banana / PNG / JPG)</div>
+              <div class="dropzone-sub">Auto-detects &amp; normalizes solo or multi-character 16:9 / 1:1 images without stretching</div>
+              <input type="file" id="input-upload-ai-image" accept="image/*" hidden />
+            </div>
+
+            <button class="btn btn-secondary btn-sm btn-block mt-6" id="btn-load-nano-paladin">
+              🛡️ Load Your Uploaded Nano Banana Female Paladin (Auto-Isolate Base Sprite)
+            </button>
+
+            <!-- Option B: Built-in Procedural Synthesizer from User's Stage 1/2/3 Choices -->
+            <div class="choice-card mt-8">
+              <div class="choice-title">Option B: Synthesize Single Base Sprite in Browser</div>
+              <p class="choice-desc">Generates a solo high-res base character on <code>#FF00FF</code> from your Stage 1–3 choices:</p>
+              <button class="btn btn-primary btn-sm btn-block mt-6" id="btn-synth-from-mannequin">
+                ⚡ Synthesize Solo Base Character
+              </button>
+            </div>
+
+            <!-- Option C: Local ComfyUI / A1111 API -->
+            <details class="fine-tune-accordion mt-8">
+              <summary>Option C: Connect Local ComfyUI / Automatic1111 API</summary>
+              <div class="accordion-inner">
+                <div class="field-box">
+                  <label for="input-api-url">Local Endpoint URL</label>
+                  <input type="text" id="input-api-url" class="ide-input mono-input" value="http://127.0.0.1:7860/sdapi/v1/img2img" />
+                </div>
+                <div class="slider-row mt-6">
+                  <div class="slider-label-line">
+                    <span>Denoising Strength</span>
+                    <code id="val-api-denoise">0.72</code>
+                  </div>
+                  <input type="range" id="slider-api-denoise" min="0.20" max="0.95" step="0.01" value="0.72" />
+                </div>
+                <button class="btn btn-secondary btn-sm btn-block mt-6" id="btn-trigger-local-api">
+                  🚀 POST Mannequin + Prompt to Local API
+                </button>
+                <div class="api-status-msg" id="api-status-readout">Ready to dispatch JSON payload.</div>
+              </div>
+            </details>
+
+            <div class="wq-footer mt-10">
+              <button class="btn btn-ghost btn-sm" data-prev-q="2">← Back</button>
+              <button class="btn btn-primary" id="btn-complete-stage-3">
+                Continue to Stage 4: Clean Base Sprite →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           STAGE 4 WIZARD: DETERMINISTIC PIXEL CLEANUP ENGINE (BASE CHARACTER)
+           ================================================================= -->
+      <section class="stage-inspector" id="inspector-stage-4" data-stage-panel="4">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 4 OF 5 • BASE CHARACTER CLEANUP</span>
+          <h2>Clean &amp; Lock Your Base Sprite</h2>
+          <p>Perfect your <strong>single Master Base Character</strong> first. Once locked, Stage 5 will use it to build animations.</p>
+        </div>
+
+        <!-- Auto-Detected Multi-Character Selector Banner (Shown when uploaded image had >1 character or widescreen crop) -->
+        <div class="choice-card mb-8" id="detected-char-selector-bar" style="display:none; margin: 10px 14px 4px;">
+          <div class="choice-title" id="detected-char-banner-title">🔍 Auto-Isolated 4 Characters from Widescreen Image</div>
+          <p class="choice-desc" id="detected-char-banner-desc">Pick which character to use as your <strong>Master Base Sprite</strong> (aspect ratio corrected to match your Stage 1 grid):</p>
+          <div class="inline-inputs mt-6" id="detected-char-buttons"></div>
+        </div>
+
+        <!-- Question 4.1: Chroma-Key Background Removal & Halo Despill -->
+        <div class="wizard-question-card active" data-stage="4" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">Strip background color (Binary Alpha)</span>
+            <span class="wq-answer-badge" id="ans-4-1">#FF00FF • Tol 32</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Pick background color and adjust tolerance, despill &amp; edge shave until all halo bleed is gone (strict 0 or 255 alpha):</p>
+            <div class="inline-inputs">
+              <input type="color" id="input-chroma-color" value="#FF00FF" class="color-picker-input" />
+              <input type="text" id="input-chroma-hex" value="#FF00FF" class="ide-input mono-input" maxlength="7" />
+              <button class="btn btn-secondary btn-sm" id="btn-eyedropper-key" title="Pick pixel from either canvas (or screen loupe in supported browsers)">
+                💧 Pick from Canvas
+              </button>
+            </div>
+
+            <label class="checkbox-line mt-6">
+              <input type="checkbox" id="check-chroma-topleft" />
+              <span>Auto-sample top-left pixel <code>(0,0)</code></span>
+            </label>
+
+            <label class="checkbox-line mt-4">
+              <input type="checkbox" id="check-chroma-contiguous" checked />
+              <span><strong>Contiguous Border Fill (Recommended)</strong> — clears outer background box inward from borders without punching holes inside character</span>
+            </label>
+
+            <div class="slider-row mt-8">
+              <div class="slider-label-line">
+                <span>Euclidean RGB Tolerance</span>
+                <code id="val-chroma-tolerance">32</code>
+              </div>
+              <input type="range" id="slider-chroma-tolerance" min="0" max="150" step="1" value="32" />
+            </div>
+
+            <div class="slider-row mt-8">
+              <div class="slider-label-line">
+                <span>Background Despill / Decontamination</span>
+                <code id="val-despill-strength">85%</code>
+              </div>
+              <input type="range" id="slider-despill-strength" min="0" max="100" step="5" value="85" />
+              <p class="field-subtext mt-4">Suppresses background color bleed (magenta/purple/green spill) from edge pixels so outlines, skin, and highlights retain true colors.</p>
+            </div>
+
+            <div class="slider-row mt-8">
+              <div class="slider-label-line">
+                <span>AI Edge Halo Shave (Fringe Trimmer)</span>
+                <code id="val-edge-shave">1px</code>
+              </div>
+              <div class="segmented-control mt-4" id="seg-edge-shave">
+                <button type="button" class="btn-seg" data-shave="0">0px (Off)</button>
+                <button type="button" class="btn-seg active" data-shave="1">1px (Trim Halo)</button>
+                <button type="button" class="btn-seg" data-shave="2">2px (Aggressive)</button>
+              </div>
+              <p class="field-subtext mt-4">Shaves the 1-2px blurry anti-aliasing blend zone between the character and background before downscaling and outlining.</p>
+            </div>
+
+            <div class="wq-footer">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 4.2: Center-Sampled Grid Downscaler -->
+        <div class="wizard-question-card" data-stage="4" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">Eliminate mixels (Grid Downscaler)</span>
+            <span class="wq-answer-badge" id="ans-4-2">Inner-50% Mode</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Sample only the inner 50% core of each giant AI pixel block to ignore blurry transitions between cells:</p>
+            <select id="select-downscale-mode" class="ide-select">
+              <option value="inner-mode">Inner-Block Mode (Most Frequent — Inner 50%)</option>
+              <option value="inner-median">Inner-Block Median (Inner 50% Core)</option>
+              <option value="center-pixel">Exact Center Pixel Sample</option>
+            </select>
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="3">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 4.3: Perceptual CIELAB Palette Quantization & Image Palette Suggestion -->
+        <div class="wizard-question-card" data-stage="4" data-q="3">
+          <div class="wq-summary-bar" data-q-toggle="3">
+            <span class="wq-num">3</span>
+            <span class="wq-title">Snap colors to Palette &amp; Suggested Image Colors</span>
+            <span class="wq-answer-badge" id="ans-4-3">CIELAB Active</span>
+          </div>
+          <div class="wq-body">
+            <label class="checkbox-line">
+              <input type="checkbox" id="check-enable-quantize" checked />
+              <span>Enable Perceptual CIELAB Palette Quantization (uncheck to compare Raw RGB)</span>
+            </label>
+
+            <!-- Suggested Palette Extracted from Uploaded / Active Sprite -->
+            <div class="choice-card mt-8">
+              <div class="flex-between">
+                <div class="choice-title" style="margin-bottom:0;">🎨 Suggested Palette from Current Image</div>
+                <select id="select-suggested-pal-count" class="ide-select ide-select-xs" style="width:auto;">
+                  <option value="8">8 Colors</option>
+                  <option value="12">12 Colors</option>
+                  <option value="16" selected>16 Colors</option>
+                  <option value="24">24 Colors</option>
+                  <option value="32">32 Colors</option>
+                </select>
+              </div>
+              <p class="choice-desc mt-4">
+                Extracted from your sprite's actual colors (ignoring background) using perceptual CIELAB clustering so you can retain the original look of your uploaded image:
+              </p>
+
+              <div class="palette-swatch-grid mt-6" id="stage4-suggested-palette-grid" title="Colors detected in the current sprite"></div>
+
+              <div class="inline-inputs mt-6">
+                <button type="button" class="btn btn-primary btn-xs flex-1" id="btn-apply-suggested-palette">
+                  ✨ Use Image Palette (Retain Look)
+                </button>
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-merge-suggested-palette" title="Add these colors into your active palette">
+                  ➕ Merge
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs" id="btn-revert-stage1-palette" title="Restore the Stage 1 preset palette">
+                  ↩ Stage 1 Preset
+                </button>
+              </div>
+            </div>
+
+            <!-- Currently Active Quantization Palette Preview -->
+            <div class="field-box mt-8">
+              <div class="flex-between">
+                <label id="stage4-active-palette-status">Active Quantization Palette (16 Swatches)</label>
+              </div>
+              <div class="palette-swatch-grid mt-4" id="stage4-active-palette-grid"></div>
+            </div>
+
+            <div class="wq-footer mt-8">
+              <button class="btn btn-ghost btn-sm" data-prev-q="2">← Back</button>
+              <button class="btn btn-primary btn-sm" data-next-q="4">Confirm &amp; Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 4.4: Morphological Cleanup & 1px Outliner -->
+        <div class="wizard-question-card" data-stage="4" data-q="4">
+          <div class="wq-summary-bar" data-q-toggle="4">
+            <span class="wq-num">4</span>
+            <span class="wq-title">Clean orphans &amp; apply 1px outline</span>
+            <span class="wq-answer-badge" id="ans-4-4">Sel-Out</span>
+          </div>
+          <div class="wq-body">
+            <label class="checkbox-line">
+              <input type="checkbox" id="check-strip-orphans" checked />
+              <span>Strip isolated single-pixel orphans</span>
+            </label>
+            <label class="checkbox-line mt-4">
+              <input type="checkbox" id="check-fill-pinholes" checked />
+              <span>Fill 1px transparent interior pinholes</span>
+            </label>
+
+            <div class="field-box mt-8">
+              <label for="select-outline-mode">1px Outliner Mode (4-Way Neighbors)</label>
+              <select id="select-outline-mode" class="ide-select">
+                <option value="selout">Selective Outlining (Sel-Out Hue-Matched Ramp)</option>
+                <option value="solid">Solid Dark / Black Outline</option>
+                <option value="none">None</option>
+              </select>
+            </div>
+
+            <div class="inline-inputs mt-6" id="solid-outline-color-row">
+              <span class="text-xs text-muted">Solid Color:</span>
+              <input type="color" id="input-outline-color" value="#141013" class="color-picker-input" />
+              <input type="text" id="input-outline-hex" value="#141013" class="ide-input mono-input" maxlength="7" />
+            </div>
+
+            <div class="wq-footer mt-10">
+              <button class="btn btn-ghost btn-sm" data-prev-q="3">← Back</button>
+              <button class="btn btn-primary" id="btn-send-to-timeline">
+                Lock Base Character &amp; Customise Poses in Stage 5 →
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           STAGE 5 WIZARD: MANNEQUIN CUSTOMIZER & POSE STUDIO
+           ================================================================= -->
+      <section class="stage-inspector" id="inspector-stage-5" data-stage-panel="5">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 5 OF 6 • MANNEQUIN CUSTOMIZER &amp; POSE STUDIO</span>
+          <h2>Sculpt Custom Poses &amp; Multi-Frame Animation Strips</h2>
+          <p>Sculpt custom articulated mannequin poses (knees, elbows, weapon angles), sequence them into a multi-frame strip, or pick from presets to build your animation guides and synthetic sample animations.</p>
+        </div>
+
+        <!-- Question 5.1: Select Animation Action & Keyframe Plan -->
+        <div class="wizard-question-card active" data-stage="5" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">Sculpt Custom Mannequin Strip &amp; Keyframe Poses</span>
+            <span class="wq-answer-badge" id="ans-5-1">Walk Cycle</span>
+          </div>
+          <div class="wq-body">
+            <div class="field-box">
+              <label for="select-anim-action-preset">1. Choose Animation Action Preset</label>
+              <select id="select-anim-action-preset" class="ide-select">
+                <option value="walk" selected>🚶 Walk Cycle (4-Frame Tactical Stride)</option>
+                <option value="run">🏃 Run / Sprint Cycle (4-Frame Dash)</option>
+                <option value="attack">⚔️ Melee Attack / Sword Slash (4-Frame Combo)</option>
+                <option value="cast">✨ Spell Cast / Channel Magic (4-Frame Burst)</option>
+                <option value="hit">🛡️ Hit Recoil / Shield Block (4-Frame Defend)</option>
+                <option value="jump">🦘 Jump &amp; Landing Arc (4-Frame Aerial)</option>
+                <option value="idle">💨 Idle Breathing Loop (4-Frame Stance)</option>
+                <option value="victory">🏆 Victory / Taunt Salute (4-Frame Pose)</option>
+                <option value="custom">🎨 Custom Mannequin Strip (Design Your Own Animation!)</option>
+              </select>
+            </div>
+
+            <div class="field-box mt-6">
+              <label for="input-custom-action-desc">Custom Action / Motion Override (Optional)</label>
+              <input type="text" id="input-custom-action-desc" class="ide-input" value="" placeholder="e.g. spinning whirlwind slash with blue energy trail..." />
+            </div>
+
+            <!-- Custom Mannequin Strip Sequencer Card -->
+            <div class="choice-card mt-8" id="custom-strip-sequencer-card">
+              <div class="flex-between">
+                <div>
+                  <div class="choice-title">🎨 Custom Mannequin Strip &amp; Sample Sprite Builder</div>
+                  <p class="choice-desc mt-2">Sculpt custom joint poses (knees, elbows, weapon), sequence them into a multi-frame strip, and create sample sprite animations:</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-xs" id="btn-toggle-strip-builder" style="flex-shrink:0; margin-left:8px;">
+                  🛠️ Hide Sequencer
+                </button>
+              </div>
+
+              <!-- Collapsible Strip Sequencer Body -->
+              <div id="custom-strip-sequencer-body" class="mt-6" style="display:block;">
+                <div class="panel-section-title">CUSTOM STRIP TIMELINE (<span id="custom-strip-frame-count">4</span> FRAMES)</div>
+                <div class="custom-strip-track mt-4" id="custom-strip-track">
+                  <!-- Dynamically populated with frame cards -->
+                </div>
+
+                <div class="inline-inputs mt-4">
+                  <button type="button" class="btn btn-secondary btn-xs flex-1" id="btn-add-strip-frame">➕ Add Frame</button>
+                  <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-dup-strip-frame">📋 Duplicate Frame</button>
+                  <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-del-strip-frame">🗑️ Remove Frame</button>
+                </div>
+
+                <!-- Active Frame Joint Sculpting Accordion/Box -->
+                <div class="choice-card mt-6" style="background:var(--bg-panel); border-color:var(--border-col);">
+                  <div class="flex-between">
+                    <span class="choice-title" id="custom-frame-sculpt-title">Sculpt Pose for Frame #1</span>
+                    <select id="select-frame-preset-picker" class="ide-select" style="font-size:11px; padding:2px 6px; width:auto;">
+                      <option value="">Load Preset or Saved Pose...</option>
+                    </select>
+                  </div>
+
+                  <div class="accordion-inner mt-4">
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FF5555"></i> Head Tilt</span>
+                        <code id="val-cframe-head">0°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-head" min="-35" max="35" step="1" value="0" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#55FF55"></i> Torso Lean</span>
+                        <code id="val-cframe-torso">2°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-torso" min="-35" max="35" step="1" value="2" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#5555FF"></i> Front Shoulder</span>
+                        <code id="val-cframe-farm">22°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-farm" min="-160" max="130" step="1" value="22" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#5555FF"></i> Front Elbow Bend</span>
+                        <code id="val-cframe-felbow">55°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-felbow" min="0" max="140" step="1" value="55" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FFFF55"></i> Back Shoulder</span>
+                        <code id="val-cframe-barm">-18°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-barm" min="-160" max="130" step="1" value="-18" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FFFF55"></i> Back Elbow Bend</span>
+                        <code id="val-cframe-belbow">45°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-belbow" min="0" max="140" step="1" value="45" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FF55FF"></i> Front Hip</span>
+                        <code id="val-cframe-fleg">8°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-fleg" min="-70" max="70" step="1" value="8" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FF55FF"></i> Front Knee Bend</span>
+                        <code id="val-cframe-fknee">12°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-fknee" min="0" max="130" step="1" value="12" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#55FFFF"></i> Back Hip</span>
+                        <code id="val-cframe-bleg">-8°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-bleg" min="-70" max="70" step="1" value="-8" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#55FFFF"></i> Back Knee Bend</span>
+                        <code id="val-cframe-bknee">16°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-bknee" min="0" max="130" step="1" value="16" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span><i class="dot-sm" style="background:#FFFFFF"></i> Weapon Angle</span>
+                        <code id="val-cframe-weapon">-35°</code>
+                      </div>
+                      <input type="range" id="slider-cframe-weapon" min="-180" max="180" step="1" value="-35" />
+                    </div>
+                    <div class="slider-row">
+                      <div class="slider-label-line">
+                        <span>Vertical Bob / Crouch Offset</span>
+                        <code id="val-cframe-bob">0 px</code>
+                      </div>
+                      <input type="range" id="slider-cframe-bob" min="-12" max="12" step="1" value="0" />
+                    </div>
+                  </div>
+
+                  <div class="inline-inputs mt-4">
+                    <input type="text" id="input-save-custom-frame-name" class="ide-input flex-2" placeholder="Save this pose to preset library (e.g. Shield Slam)..." />
+                    <button type="button" class="btn btn-secondary btn-xs flex-1" id="btn-save-custom-frame-preset">
+                      💾 Save Pose
+                    </button>
+                  </div>
+                </div>
+
+                <!-- One-Click Execution Actions -->
+                <div class="inline-inputs mt-6">
+                  <button type="button" class="btn btn-primary btn-sm flex-1" id="btn-apply-custom-strip-timeline">
+                    ✨ Apply to Timeline &amp; AI Guide
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm flex-1" id="btn-synth-custom-sprite-animation">
+                    ⚡ Synthesize Sample Character Animation
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live 4-Frame Biomechanical Keyframe Plan -->
+            <div class="prompt-factors-breakdown mt-8" id="anim-action-frames-breakdown">
+              <!-- Populated dynamically with Frame 1..4 descriptions -->
+            </div>
+
+            <div class="choice-card mt-8">
+              <div class="choice-title">Instant Pose Guide Strip (Articulated Mannequin)</div>
+              <p class="choice-desc">Renders 4 clean, articulated mannequin poses (with knee &amp; elbow bends, directional armor, and weapons) alongside your locked Base Character on the Left Canvas:</p>
+
+              <div class="field-box mt-4">
+                <label for="select-pose-guide-mode">Pose Guide Generator Mode</label>
+                <select id="select-pose-guide-mode" class="ide-select">
+                  <option value="mannequin" selected>🧍 Color-ID Articulated Mannequin (Clean &amp; Exact - Recommended)</option>
+                  <option value="paperdoll">🎭 Experimental Paper-Doll Sprite Cutout</option>
+                </select>
+              </div>
+
+              <button class="btn btn-primary btn-sm btn-block mt-6" id="btn-paper-doll-animate">
+                ✨ Generate 4-Frame Mannequin Pose Strip
+              </button>
+            </div>
+
+            <div class="wq-footer mt-8">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Next: AI Animation Bridge →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 5.2: AI Animation Bridge (Reference Sheet + Frame-by-Frame Prompt + Auto-Clean Upload) -->
+        <div class="wizard-question-card" data-stage="5" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">Generate Animation with AI (Reference + Prompt)</span>
+            <span class="wq-answer-badge" id="ans-5-2">AI Bridge Ready</span>
+          </div>
+          <div class="wq-body">
+            <!-- Step A: Download Composite Reference Sheet so AI keeps 100% character consistency -->
+            <div class="choice-card">
+              <div class="choice-title">Step A: Download AI Identity + Pose Reference Image</div>
+              <p class="choice-desc">
+                Attach this image in <strong>Nano Banana / Gemini / ChatGPT / ComfyUI</strong> so the AI sees your exact locked character alongside the 4 target poses (previewed on Left Canvas):
+              </p>
+              <button class="btn btn-primary btn-xs btn-block mt-6" id="btn-dl-ai-composite-guide">
+                ⬇ Download Composite Identity + 4-Pose Reference Sheet (.PNG)
+              </button>
+              <div class="inline-inputs mt-6">
+                <button class="btn btn-secondary btn-xs flex-1" id="btn-download-base-ref">
+                  ⬇ Base Sprite Only
+                </button>
+                <button class="btn btn-ghost btn-xs flex-1" id="btn-preview-strip-guide">
+                  ⬇ 4-Pose Mannequin Strip
+                </button>
+              </div>
+            </div>
+
+            <!-- Step B: Copy Frame-by-Frame AI Animation Prompt -->
+            <div class="field-box mt-8">
+              <div class="flex-between">
+                <label for="select-ai-anim-prompt-mode">Step B: AI Animation Prompt Mode</label>
+                <button class="btn btn-ghost btn-xs" id="btn-copy-stage5-prompt">📋 Copy Prompt</button>
+              </div>
+              <select id="select-ai-anim-prompt-mode" class="ide-select mt-4">
+                <option value="strip" selected>Full 4-Frame Horizontal Strip (Use with Reference Image)</option>
+                <option value="frame1">Single Keyframe Only — Frame 1 Pose</option>
+                <option value="frame2">Single Keyframe Only — Frame 2 Pose</option>
+                <option value="frame3">Single Keyframe Only — Frame 3 Pose</option>
+                <option value="frame4">Single Keyframe Only — Frame 4 Pose</option>
+              </select>
+              <textarea id="stage5-anim-prompt-output" rows="4" class="ide-textarea mt-4"></textarea>
+            </div>
+
+            <!-- Step C: Upload AI Strip or Individual Keyframe Images (Auto-Cleaned with Locked Stage 4 Rules!) -->
+            <div class="choice-card mt-8" id="stage5-detected-strip-card">
+              <div class="choice-title">Step C: Import AI Animation Output (Auto-Isolated &amp; Stage 4 Cleaned)</div>
+              <p class="choice-desc" id="stage5-detected-strip-desc">
+                Drop your AI-generated strip (or individual keyframe images) below. Every frame is automatically isolated, aspect-normalized, and quantized to your <strong>Locked Stage 4 Palette &amp; Outline</strong>:
+              </p>
+
+              <div class="inline-inputs mt-6">
+                <label class="btn btn-primary btn-xs flex-1 file-label" style="justify-content:center;">
+                  📥 Upload AI Strip (Auto-Isolate)
+                  <input type="file" id="input-upload-stage5-strip" accept="image/*" hidden />
+                </label>
+                <label class="btn btn-secondary btn-xs flex-1 file-label" style="justify-content:center;">
+                  ➕ Append 1 Keyframe Image
+                  <input type="file" id="input-upload-single-keyframe" accept="image/*" hidden />
+                </label>
+              </div>
+
+              <div class="inline-inputs mt-6">
+                <button class="btn btn-ghost btn-xs flex-1" id="btn-clean-all-detected-frames">
+                  🎞️ Batch-Clean Uploaded Strip
+                </button>
+                <button class="btn btn-ghost btn-xs flex-1" id="btn-generate-synth-strip">
+                  ⚡ Synthesize Demo Strip
+                </button>
+              </div>
+
+              <div class="inline-inputs mt-6" style="display:none;">
+                <input type="checkbox" id="strip-pose-checkboxes" hidden />
+                <input type="number" id="input-slice-count" min="1" max="16" value="4" class="ide-input" />
+                <button class="btn btn-ghost btn-xs" id="btn-slice-current-strip">✂️ Slice</button>
+              </div>
+            </div>
+
+            <div class="wq-footer mt-8">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <button class="btn btn-primary btn-sm" id="btn-complete-stage-5">Next: Ground Baseline &amp; Export (Stage 6) →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- =================================================================
+           STAGE 6 WIZARD: TIMELINE GROUNDING & MASTER SPRITE SHEET EXPORTER
+           ================================================================= -->
+      <section class="stage-inspector" id="inspector-stage-6" data-stage-panel="6">
+        <div class="wizard-stage-header">
+          <span class="wizard-step-eyebrow">STAGE 6 OF 6 • TIMELINE GROUNDING &amp; MASTER EXPORT</span>
+          <h2>Ground Baseline &amp; Export Sprite Sheet + Atlas</h2>
+          <p>Snap lowest foot pixels to a unified ground line, fine-tune individual frame positions, save multi-action clips, and pack your master sprite sheet and JSON atlas.</p>
+        </div>
+
+        <!-- Question 6.1: Foot-Baseline Anchor & Per-Frame Nudge -->
+        <div class="wizard-question-card active" data-stage="6" data-q="1">
+          <div class="wq-summary-bar" data-q-toggle="1">
+            <span class="wq-num">1</span>
+            <span class="wq-title">Ground Foot-Baseline &amp; Fine-Tune Frames</span>
+            <span class="wq-answer-badge" id="ans-6-1">Y = 56 px</span>
+          </div>
+          <div class="wq-body">
+            <p class="wq-prompt">Snaps the lowest opaque foot pixel (max Y) and center-of-mass of every frame to a unified ground line so animations never jitter:</p>
+            <div class="slider-row">
+              <div class="slider-label-line">
+                <span>Ground Baseline Y</span>
+                <code id="val-baseline-y">56 px</code>
+              </div>
+              <input type="range" id="slider-baseline-y" min="16" max="63" step="1" value="56" />
+            </div>
+
+            <label class="checkbox-line mt-6">
+              <input type="checkbox" id="check-align-com-x" checked />
+              <span>Also center horizontal center-of-mass</span>
+            </label>
+
+            <button class="btn btn-secondary btn-sm btn-block mt-8" id="btn-align-baselines">
+              ⚓ Snap All Timeline Frames to Baseline
+            </button>
+
+            <div class="field-box mt-8">
+              <label>Fine-Tune Active Frame Position (1px Nudge)</label>
+              <div class="inline-inputs mt-4">
+                <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-nudge-left">← Left</button>
+                <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-nudge-up">↑ Up</button>
+                <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-nudge-down">↓ Down</button>
+                <button type="button" class="btn btn-ghost btn-xs flex-1" id="btn-nudge-right">→ Right</button>
+              </div>
+            </div>
+
+            <div class="baseline-telemetry-box mt-6" id="baseline-telemetry-log">
+              Ready to align frames.
+            </div>
+
+            <div class="wq-footer">
+              <span></span>
+              <button class="btn btn-primary btn-sm" data-next-q="2">Next: Multi-Clip Sheet &amp; Export →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Question 6.2: Multi-Action Clip Library & Sprite Sheet Exporter -->
+        <div class="wizard-question-card" data-stage="6" data-q="2">
+          <div class="wq-summary-bar" data-q-toggle="2">
+            <span class="wq-num">2</span>
+            <span class="wq-title">Save Clips &amp; Export Sprite Sheet + JSON Atlas</span>
+            <span class="wq-answer-badge" id="ans-6-2">Ready</span>
+          </div>
+          <div class="wq-body">
+            <!-- Multi-Action Clip Saver (Combine Idle + Walk + Attack into 1 Master Sheet!) -->
+            <div class="choice-card mb-8">
+              <div class="choice-title">Multi-Action Clip Library (Combine Multiple Animations)</div>
+              <p class="choice-desc">Save your current timeline as a named animation clip (e.g. <code>idle</code>, <code>walk</code>, <code>attack</code>), then pack all saved clips into one multi-row Sprite Sheet:</p>
+              <div class="inline-inputs mt-6">
+                <button type="button" class="btn btn-secondary btn-xs flex-1" id="btn-save-clip-to-library">
+                  ➕ Save Current Clip (<span id="lbl-current-clip-tag">walk</span>)
+                </button>
+                <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-clip-library" title="Clear saved clips">
+                  🗑️ Clear
+                </button>
+              </div>
+              <div class=" baseline-telemetry-box mt-6" id="saved-clips-summary">
+                No multi-clips saved yet — exporting current timeline strip.
+              </div>
+            </div>
+
+            <div class="inline-inputs">
+              <div class="field-box">
+                <label for="input-sheet-cols">Columns</label>
+                <input type="number" id="input-sheet-cols" min="1" max="16" value="4" class="ide-input" />
+              </div>
+              <div class="field-box">
+                <label for="input-sheet-pad">Padding (px)</label>
+                <input type="number" id="input-sheet-pad" min="0" max="16" value="2" class="ide-input" />
+              </div>
+              <div class="field-box flex-1">
+                <label for="input-anim-tag">Anim Tag</label>
+                <input type="text" id="input-anim-tag" value="walk" class="ide-input mono-input" />
+              </div>
+            </div>
+
+            <div class="inline-inputs mt-8">
+              <button class="btn btn-primary flex-1" id="btn-export-sheet-png">
+                ⬇ Download PNG Sheet
+              </button>
+              <button class="btn btn-secondary flex-1" id="btn-export-atlas-json">
+                ⬇ Download JSON Atlas
+              </button>
+            </div>
+
+            <div class="field-box mt-8">
+              <label for="atlas-json-preview">JSON Atlas (Godot / Phaser / Aseprite)</label>
+              <textarea id="atlas-json-preview" rows="4" class="ide-textarea mono-input" readonly></textarea>
+            </div>
+
+            <div class="wq-footer">
+              <button class="btn btn-ghost btn-sm" data-prev-q="1">← Back</button>
+              <span></span>
+            </div>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- BOTTOM ANIMATION TIMELINE & SPRITE SHEET DOCK -->
+  <footer class="timeline-dock" id="bottom-timeline-dock" aria-label="Animation Timeline and Sprite Sheet Dock">
+    <!-- Left: Live Playback Preview & Controls -->
+    <div class="dock-preview-box">
+      <div class="anim-preview-frame checkerboard-bg">
+        <canvas id="canvas-anim-preview" width="64" height="64"></canvas>
+      </div>
+      <div class="anim-controls">
+        <div class="inline-inputs">
+          <button class="btn btn-primary btn-xs" id="btn-anim-play">⏸ Pause</button>
+          <select id="select-anim-loop" class="ide-select ide-select-xs">
+            <option value="forward">Loop ↻</option>
+            <option value="pingpong">Ping-Pong ⇄</option>
+          </select>
+        </div>
+        <div class="slider-row compact">
+          <div class="slider-label-line">
+            <span>Speed</span>
+            <code id="val-anim-fps">6 FPS</code>
+          </div>
+          <input type="range" id="slider-anim-fps" min="1" max="24" step="1" value="6" />
+        </div>
+        <label class="checkbox-line text-xs">
+          <input type="checkbox" id="check-onion-skin" />
+          <span>Onion Skin</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Center: Interactive Multi-Frame Timeline Strip -->
+    <div class="dock-timeline-track">
+      <div class="dock-track-header">
+        <span class="panel-section-title">TIMELINE FRAMES (<span id="timeline-frame-count">0</span>)</span>
+        <div class="track-actions">
+          <button class="btn btn-ghost btn-xs" id="btn-add-current-frame">+ Add Frame</button>
+          <button class="btn btn-ghost btn-xs" id="btn-duplicate-frame">⧉ Duplicate</button>
+          <button class="btn btn-ghost btn-xs" id="btn-delete-frame">🗑️ Delete</button>
+          <button class="btn btn-ghost btn-xs" id="btn-quick-ground-dock">⚓ Ground All</button>
+        </div>
+      </div>
+      <div class="timeline-frames-scroll" id="timeline-frames-container"></div>
+    </div>
+
+    <!-- Right: Packed Sprite Sheet Mini-Preview -->
+    <div class="dock-sheet-preview">
+      <div class="dock-track-header">
+        <span class="panel-section-title">PACKED SHEET (<span id="packed-sheet-dims">--</span>)</span>
+        <button class="btn btn-primary btn-xs" id="btn-dock-download-sheet">⬇ Export PNG</button>
+      </div>
+      <div class="sheet-canvas-wrap checkerboard-bg">
+        <canvas id="canvas-sheet-preview" width="64" height="64"></canvas>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/bundle.js"></script>
+</body>
+</html>
